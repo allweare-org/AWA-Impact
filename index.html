@@ -146,7 +146,7 @@ body {
   color: #6b6b6b;
   margin-bottom: 14px;
 }
-
+  
 .popup-meta-item {
   display: flex;
   align-items: center;
@@ -156,6 +156,9 @@ body {
 .popup-icon {
   width: 18px;
   height: 18px;
+  flex-shrink: 0;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .popup-details {
@@ -250,24 +253,45 @@ function bindMapInteractions() {
     const coords = e.features[0].geometry.coordinates.slice();
     const population = parseNumber(props.Population);
 
-    const popupHtml = `
-      <div class="popup-card">
-        <div class="popup-title">${escapeHtml(props.name || 'Site')}</div>
+const checkIcon = `
+  <svg class="popup-icon" viewBox="0 0 20 20" aria-hidden="true">
+    <circle cx="10" cy="10" r="8.5" fill="none" stroke="#6f6f6f" stroke-width="1.5"></circle>
+    <path d="M6 10.2l2.2 2.2L14 6.8" fill="none" stroke="#6f6f6f" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path>
+  </svg>
+`;
 
-        <div class="popup-meta-row">
-          <div>${escapeHtml(props.installDate || 'No install date')}</div>
-          <div>${population.toLocaleString()}</div>
+const personIcon = `
+  <svg class="popup-icon" viewBox="0 0 20 20" aria-hidden="true">
+    <circle cx="10" cy="6" r="3" fill="#6f6f6f"></circle>
+    <path d="M5 16c0-2.8 2.2-5 5-5s5 2.2 5 5" fill="#6f6f6f"></path>
+  </svg>
+`;
+
+  const popupHtml = `
+    <div class="popup-card">
+      <div class="popup-title">${escapeHtml(props.name || 'Site')}</div>
+  
+      <div class="popup-meta-row">
+        <div class="popup-meta-item">
+          ${checkIcon}
+          <span>${escapeHtml(props.installDate || 'No install date')}</span>
         </div>
-
-        <div class="popup-details">
-          <div><strong>System:</strong> ${escapeHtml(props.systemName || props.designType || 'N/A')}</div>
-          <div><strong>System number:</strong> ${escapeHtml(props.systemNumber || 'N/A')}</div>
-          <div><strong>Type:</strong> ${escapeHtml(props.customerType || 'N/A')}</div>
-          <div><strong>District:</strong> ${escapeHtml(props.district || 'N/A')}</div>
-          <div><strong>Customer ID:</strong> ${escapeHtml(props.customerId || 'N/A')}</div>
+  
+        <div class="popup-meta-item">
+          ${personIcon}
+          <span>${population.toLocaleString()}</span>
         </div>
       </div>
-    `;
+  
+      <div class="popup-details">
+        <div><strong>System:</strong> ${escapeHtml(props.systemName || props.designType || 'N/A')}</div>
+        <div><strong>System number:</strong> ${escapeHtml(props.systemNumber || 'N/A')}</div>
+        <div><strong>Type:</strong> ${escapeHtml(props.customerType || 'N/A')}</div>
+        <div><strong>District:</strong> ${escapeHtml(props.district || 'N/A')}</div>
+        <div><strong>Customer ID:</strong> ${escapeHtml(props.customerId || 'N/A')}</div>
+      </div>
+    </div>
+  `;
 
     new mapboxgl.Popup({
       offset: 18,
@@ -436,6 +460,7 @@ document.getElementById('styleToggle').addEventListener('click', () => {
 </script>
 </body>
 </html>
+
 
 
 
