@@ -156,7 +156,7 @@ map.on('load', () => {
       clusterRadius: 150,
       clusterMaxZoom: 13,
       clusterProperties: {
-        people: [['+', ['accumulated'], ['coalesce', ['to-number', ['get', 'Population']], 0]]]
+        people: ['+', ['get', 'Population']]
       }
     });
 
@@ -346,3 +346,4 @@ map.on('load', () => {
 </script>
 </body>
 </html>
+
