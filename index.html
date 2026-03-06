@@ -22,18 +22,20 @@ body {
   width: 100%;
 }
 
-/* bottom-right custom controls */
+/* Bottom-right controls wrapper */
 #customControls {
   position: absolute;
-  right: 20px;
-  bottom: 20px;
+  right: 16px;
+  bottom: 132px;
   z-index: 10;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  align-items: flex-end;
+  align-items: center;
+  width: 56px;
+  pointer-events: none;
 }
 
+/* Style toggle button */
 #styleToggle {
   width: 56px;
   height: 56px;
@@ -47,6 +49,7 @@ body {
   justify-content: center;
   box-shadow: 0 4px 14px rgba(0,0,0,0.3);
   padding: 0;
+  pointer-events: auto;
 }
 
 #styleToggle:hover {
@@ -58,14 +61,22 @@ body {
   height: 28px;
 }
 
-/* move zoom buttons to lower right */
+/* Put zoom buttons directly under the map-style button */
 .mapboxgl-ctrl-bottom-right {
-  right: 20px;
-  bottom: 86px;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
 }
 
 .mapboxgl-ctrl-top-right {
   display: none;
+}
+
+.mapboxgl-ctrl-bottom-right .mapboxgl-ctrl {
+  margin: 0 !important;
 }
 
 .mapboxgl-ctrl-group {
@@ -89,7 +100,24 @@ body {
   transform: scale(1.05);
 }
 
-/* popup styling */
+/* Move attribution below controls */
+.mapboxgl-ctrl-bottom-left {
+  left: auto !important;
+  right: 16px !important;
+  bottom: -6px !important;
+}
+
+.mapboxgl-ctrl-bottom-left .mapboxgl-ctrl {
+  margin: 0 !important;
+}
+
+.mapboxgl-ctrl-attrib {
+  font-size: 11px !important;
+  background: rgba(255,255,255,0.85) !important;
+  border-radius: 4px 4px 0 0 !important;
+}
+
+/* Popup styling */
 .mapboxgl-popup {
   max-width: 560px;
 }
