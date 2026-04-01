@@ -412,30 +412,9 @@ function bindMapInteractions() {
 
 function addSiteLayers() {
   d3.csv('./Impact_Map_Export%20-%20Sheet1.csv').then(function(data) {
-    const systemTotalsByCustomerId = new Map();
-
-    // Build totals from ALL rows, even if they do not have coordinates
-    data.forEach(d => {
-      const customerId = String(d['Customer ID'] || '').trim();
-      const systemNumber = parseNumber(d['Customer System Number']);
-
-      if (!customerId) return;
-
-      const currentMax = systemTotalsByCustomerId.get(customerId) || 0;
-      systemTotalsByCustomerId.set(
-        customerId,
-        Math.max(currentMax, systemNumber)
-      );
-    });
-
     const features = data
       .filter(d => d.longitude && d.latitude)
       .map(d => {
-        const customerId = String(d['Customer ID'] || '').trim();
-        const totalSystems = customerId
-          ? (systemTotalsByCustomerId.get(customerId) || 1)
-          : 1;
-
         return {
           type: 'Feature',
           properties: {
@@ -446,7 +425,7 @@ function addSiteLayers() {
             installDate: d['Install Date'] || '',
             systemName: d['System Name'] || '',
             designType: d['Design Type'] || '',
-            systemNumber: totalSystems
+            systemNumber: parseNumber(d['Customer System Total'])
           },
           geometry: {
             type: 'Point',
@@ -550,7 +529,6 @@ function addSiteLayers() {
     });
   });
 }
-
 map.on('load', () => {
   addSiteLayers();
   bindMapInteractions();
