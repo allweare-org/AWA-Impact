@@ -410,46 +410,39 @@ function bindMapInteractions() {
   });
 }
 
-  function addSiteLayers() {
-  d3.text('./Impact_Map_Export%20-%20Sheet1.csv').then(function(rawText) {
-    const rows = d3.csvParseRows(rawText);
-
-    const dataRows = rows.slice(1); // skip header row
+function addSiteLayers() {
+  d3.csv('./Impact_Map_Export%20-%20Sheet1.csv').then(function(data) {
     const grouped = new Map();
 
-    dataRows
-      .filter(r => r[19] && r[20]) // latitude, longitude
-      .forEach(r => {
-        const systemCustomerId = String(r[0] || '').trim(); // FIRST Customer ID column
-        const systemName = String(r[2] || '').trim();
-        const designType = String(r[3] || '').trim();
-        const installDate = String(r[5] || '').trim();
-        const systemNumber = parseNumber(r[6]);
-        const population = parseNumber(r[11]);
-        const district = String(r[17] || '').trim();
-        const lat = parseNumber(r[19]);
-        const lng = parseNumber(r[20]);
-        const customerName = String(r[23] || '').trim();
-        const customerType = String(r[24] || '').trim();
+    function getBaseName(d) {
+      const rawName =
+        String(d['Customer Name'] || d['System Name'] || '').trim();
 
-        const key = systemCustomerId || `${lat}|${lng}`;
+      return rawName
+        .replace(/\s+#\d+\s*$/i, '')
+        .trim()
+        .toLowerCase();
+    }
+
+    data
+      .filter(d => d.longitude && d.latitude)
+      .forEach(d => {
+        const lat = parseNumber(d.latitude);
+        const lng = parseNumber(d.longitude);
+        const systemNumber = parseNumber(d['Customer System Number']);
+
+        const baseName = getBaseName(d);
+        const key = baseName || `${lat}|${lng}`;
 
         if (!grouped.has(key)) {
           grouped.set(key, []);
         }
 
         grouped.get(key).push({
-          systemCustomerId,
-          systemName,
-          designType,
-          installDate,
-          systemNumber,
-          population,
-          district,
+          raw: d,
           lat,
           lng,
-          customerName,
-          customerType
+          systemNumber
         });
       });
 
@@ -459,24 +452,26 @@ function bindMapInteractions() {
         ...rows.map(r => r.systemNumber || 0)
       );
 
-      const bestRow =
+      const bestRowObj =
         rows.find(r => r.systemNumber === highestSystemNumber) || rows[0];
+
+      const bestRow = bestRowObj.raw;
 
       return {
         type: 'Feature',
         properties: {
-          Population: bestRow.population,
-          name: bestRow.systemName || bestRow.customerName || '',
-          district: bestRow.district || '',
-          customerType: bestRow.customerType || '',
-          installDate: bestRow.installDate || '',
-          systemName: bestRow.systemName || '',
-          designType: bestRow.designType || '',
+          Population: parseNumber(bestRow['Population']),
+          name: bestRow['System Name'] || bestRow['Customer Name'] || '',
+          district: bestRow['District'] || '',
+          customerType: bestRow['Customer Type'] || '',
+          installDate: bestRow['Install Date'] || '',
+          systemName: bestRow['System Name'] || '',
+          designType: bestRow['Design Type'] || '',
           systemNumber: highestSystemNumber
         },
         geometry: {
           type: 'Point',
-          coordinates: [bestRow.lng, bestRow.lat]
+          coordinates: [bestRowObj.lng, bestRowObj.lat]
         }
       };
     });
