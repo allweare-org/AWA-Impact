@@ -412,69 +412,49 @@ function bindMapInteractions() {
 
 function addSiteLayers() {
   d3.csv('./Impact_Map_Export%20-%20Sheet1.csv').then(function(data) {
-    const grouped = new Map();
-
-    function getBaseName(d) {
-      const rawName =
-        String(d['Customer Name'] || d['System Name'] || '').trim();
-
-      return rawName
-        .replace(/\s+#\d+\s*$/i, '')
-        .trim()
-        .toLowerCase();
-    }
+    const systemTotalsByCustomerId = new Map();
 
     data
       .filter(d => d.longitude && d.latitude)
       .forEach(d => {
-        const lat = parseNumber(d.latitude);
-        const lng = parseNumber(d.longitude);
+        const customerId = String(d['Customer ID'] || '').trim();
         const systemNumber = parseNumber(d['Customer System Number']);
 
-        const baseName = getBaseName(d);
-        const key = baseName || `${lat}|${lng}`;
+        if (!customerId) return;
 
-        if (!grouped.has(key)) {
-          grouped.set(key, []);
-        }
-
-        grouped.get(key).push({
-          raw: d,
-          lat,
-          lng,
-          systemNumber
-        });
+        const currentMax = systemTotalsByCustomerId.get(customerId) || 0;
+        systemTotalsByCustomerId.set(
+          customerId,
+          Math.max(currentMax, systemNumber)
+        );
       });
 
-    const features = Array.from(grouped.values()).map(rows => {
-      const highestSystemNumber = Math.max(
-        1,
-        ...rows.map(r => r.systemNumber || 0)
-      );
+    const features = data
+      .filter(d => d.longitude && d.latitude)
+      .map(d => {
+        const customerId = String(d['Customer ID'] || '').trim();
+        const totalSystems = customerId
+          ? (systemTotalsByCustomerId.get(customerId) || 1)
+          : 1;
 
-      const bestRowObj =
-        rows.find(r => r.systemNumber === highestSystemNumber) || rows[0];
-
-      const bestRow = bestRowObj.raw;
-
-      return {
-        type: 'Feature',
-        properties: {
-          Population: parseNumber(bestRow['Population']),
-          name: bestRow['System Name'] || bestRow['Customer Name'] || '',
-          district: bestRow['District'] || '',
-          customerType: bestRow['Customer Type'] || '',
-          installDate: bestRow['Install Date'] || '',
-          systemName: bestRow['System Name'] || '',
-          designType: bestRow['Design Type'] || '',
-          systemNumber: highestSystemNumber
-        },
-        geometry: {
-          type: 'Point',
-          coordinates: [bestRowObj.lng, bestRowObj.lat]
-        }
-      };
-    });
+        return {
+          type: 'Feature',
+          properties: {
+            Population: parseNumber(d['Population']),
+            name: d['System Name'] || d['Customer Name'] || '',
+            district: d['District'] || '',
+            customerType: d['Customer Type'] || '',
+            installDate: d['Install Date'] || '',
+            systemName: d['System Name'] || '',
+            designType: d['Design Type'] || '',
+            systemNumber: totalSystems
+          },
+          geometry: {
+            type: 'Point',
+            coordinates: [parseNumber(d.longitude), parseNumber(d.latitude)]
+          }
+        };
+      });
 
     const geojson = { type: 'FeatureCollection', features };
 
