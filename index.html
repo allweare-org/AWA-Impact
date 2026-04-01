@@ -33,7 +33,7 @@ body {
   border-radius: 10px;
   border: 1px solid rgba(255,255,255,0.08);
   box-shadow: 0 4px 14px rgba(0,0,0,0.35);
-  padding: 10px 12px;
+  ping: 10px 12px;
   min-width: 280px;
 }
 
@@ -414,25 +414,23 @@ function addSiteLayers() {
   d3.csv('./Impact_Map_Export%20-%20Sheet1.csv').then(function(data) {
     const features = data
       .filter(d => d.longitude && d.latitude)
-      .map(d => {
-        return {
-          type: 'Feature',
-          properties: {
-            Population: parseNumber(d['Population']),
-            name: d['System Name'] || d['Customer Name'] || '',
-            district: d['District'] || '',
-            customerType: d['Customer Type'] || '',
-            installDate: d['Install Date'] || '',
-            systemName: d['System Name'] || '',
-            designType: d['Design Type'] || '',
-            systemNumber: parseNumber(d['Customer System Total'])
-          },
-          geometry: {
-            type: 'Point',
-            coordinates: [parseNumber(d.longitude), parseNumber(d.latitude)]
-          }
-        };
-      });
+      .map(d => ({
+        type: 'Feature',
+        properties: {
+          Population: parseNumber(d['Population']),
+          name: d['System Name'] || d['Customer Name'] || '',
+          district: d['District'] || '',
+          customerType: d['Customer Type'] || '',
+          installDate: d['Install Date'] || '',
+          systemName: d['System Name'] || '',
+          designType: d['Design Type'] || '',
+          systemNumber: parseNumber(d['Customer System Total'])
+        },
+        geometry: {
+          type: 'Point',
+          coordinates: [parseNumber(d.longitude), parseNumber(d.latitude)]
+        }
+      }));
 
     const geojson = { type: 'FeatureCollection', features };
 
@@ -529,6 +527,7 @@ function addSiteLayers() {
     });
   });
 }
+  
 map.on('load', () => {
   addSiteLayers();
   bindMapInteractions();
