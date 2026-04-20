@@ -393,17 +393,22 @@
           .addTo(map);
       });
 
-      tCanvas().style.cursor = '';
-    });
+      map.on('mouseenter', 'clusters', () => {
+        map.getCanvas().style.cursor = 'pointer';
+      });
 
-    map.on('mouseenter', 'points', () => {
-      map.getCanvas().style.cursor = 'pointer';
-    });
+      map.on('mouseleave', 'clusters', () => {
+        map.getCanvas().style.cursor = '';
+      });
 
-    map.on('mouseleave', 'points', () => {
-      map.getCanvas().style.cursor = '';
-    });
-}
+      map.on('mouseenter', 'points', () => {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+
+      map.on('mouseleave', 'points', () => {
+        map.getCanvas().style.cursor = '';
+      });
+    }
     function addSiteLayers() {
       d3.csv('https://docs.google.com/spreadsheets/d/e/2PACX-1vSpFsgdlsfILsKSm30c0EMSfR6inYDjP8ByrwI9emnK1Gp5CeqOJmMikZAr6s8EQTkvbuofj21J7jen/pub?output=csv').then(function (data) {
         const grouped = new Map();
