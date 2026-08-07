@@ -62,7 +62,7 @@ func main() {
 	// --- 5. FETCH AND BUILD IN-MEMORY LOOKUP TABLES ---
 
 	// Fetch Customer Tab (Columns A to D)
-	customerResp, err := srv.Spreadsheets.Values.Get(customerMasterID, "'Customer'!A:D").Do()
+	customerResp, err := srv.Spreadsheets.Values.Get(customerMasterID, "'Project'!A:D").Do()
 	if err != nil {
 		log.Fatalf("Failed to read true Customer source master: %v.", err)
 	}
@@ -197,13 +197,44 @@ func main() {
 	var tempRows [][]string
 	customerSystemCounts := make(map[string]int)
 
+	// Build a coordinate map from System sheet column K (index 10) keyed by Customer ID (Project ID)
+	systemCoordMap := make(map[string][2]string) // custID -> [lat, lng]
+	for i, row := range systemResp.Values {
+		if i == 0 || len(row) < 11 {
+			continue
+		}
+		custID := strings.TrimSpace(fmt.Sprintf("%v", row[3]))
+		if custID == "" || custID == "0" {
+			continue
+		}
+		coordStr := strings.TrimSpace(fmt.Sprintf("%v", row[10]))
+		if coordStr != "" && strings.Contains(coordStr, ",") {
+			parts := strings.Split(coordStr, ",")
+			if len(parts) >= 2 {
+				lat := strings.TrimSpace(parts[0])
+				lng := strings.TrimSpace(parts[1])
+				if _, errLat := strconv.ParseFloat(lat, 64); errLat == nil {
+					if _, errLng := strconv.ParseFloat(lng, 64); errLng == nil {
+						if _, exists := systemCoordMap[custID]; !exists {
+							systemCoordMap[custID] = [2]string{lat, lng}
+						}
+					}
+				}
+			}
+		}
+	}
+	fmt.Printf("ℹ️  Parsed coordinates from System sheet for %d customers.\n", len(systemCoordMap))
+
 	for i, row := range systemResp.Values {
 		if i == 0 || len(row) < 9 {
 			continue
 		}
 
 		status := strings.TrimSpace(fmt.Sprintf("%v", row[7]))
-		if strings.EqualFold(status, "Installed") {
+		// Accept Active, Nearing EOL, and Offline as valid installed statuses
+		statusLower := strings.ToLower(status)
+		isActive := statusLower == "active" || statusLower == "nearing eol" || statusLower == "offline" || statusLower == "installed"
+		if isActive {
 			custID := strings.TrimSpace(fmt.Sprintf("%v", row[3]))
 
 			customerSystemCounts[custID]++
@@ -245,6 +276,14 @@ func main() {
 		popVal := latestPopVal[custID]
 		totalSys := strconv.Itoa(customerSystemCounts[custID])
 
+		// Prefer coordinates from System sheet, fall back to Location sheet
+		lat := locInfo.Latitude
+		lng := locInfo.Longitude
+		if coords, ok := systemCoordMap[custID]; ok {
+			lat = coords[0]
+			lng = coords[1]
+		}
+
 		finalData = append(finalData, []interface{}{
 			custID,
 			r[1],
@@ -257,8 +296,8 @@ func main() {
 			custInfo.Name,
 			custInfo.Type,
 			locInfo.District,
-			locInfo.Latitude,
-			locInfo.Longitude,
+			lat,
+			lng,
 			popVal,
 		})
 	}
